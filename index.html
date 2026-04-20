@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnterpriseHub — Unified Management Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #111827;
+    --bg3: #1a2035;
+    --card: #161d2e;
+    --border: #1e2d45;
+    --accent: #2563eb;
+    --accent2: #0ea5e9;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --purple: #8b5cf6;
+    --pink: #ec4899;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:14px; min-height:100vh; overflow-x:hidden; }
+
+  /* ===== LOGIN ===== */
+  #loginScreen {
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+    background: radial-gradient(ellipse at 20% 50%, #0d1f3c 0%, #0a0e1a 60%);
+    position:fixed; inset:0; z-index:1000;
+  }
+  .login-box {
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:48px 40px; width:420px; max-width:95vw;
+    box-shadow: 0 0 60px rgba(37,99,235,0.15);
+  }
+  .login-logo { text-align:center; margin-bottom:32px; }
+  .login-logo .brand { font-size:28px; font-weight:700; color:#fff; letter-spacing:-0.5px; }
+  .login-logo .brand span { color:var(--accent2); }
+  .login-logo .sub { color:var(--text3); font-size:12px; margin-top:4px; font-family:var(--mono); }
+  .role-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:24px; }
+  .role-btn {
+    padding:10px 8px; border:1px solid var(--border); border-radius:8px; background:var(--bg3);
+    color:var(--text2); cursor:pointer; font-size:12px; font-family:var(--font); transition:all 0.2s;
+    text-align:center;
+  }
+  .role-btn:hover, .role-btn.active { border-color:var(--accent); background:rgba(37,99,235,0.15); color:#fff; }
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:11px; color:var(--text3); margin-bottom:6px; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.05em; }
+  .form-group input {
+    width:100%; padding:10px 14px; background:var(--bg3); border:1px solid var(--border);
+    border-radius:8px; color:var(--text); font-family:var(--font); font-size:14px; outline:none; transition:border 0.2s;
+  }
+  .form-group input:focus { border-color:var(--accent); }
+  .login-btn {
+    width:100%; padding:12px; background:var(--accent); border:none; border-radius:8px;
+    color:#fff; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s; font-family:var(--font);
+  }
+  .login-btn:hover { background:#1d4ed8; transform:translateY(-1px); }
+  .login-hint { text-align:center; margin-top:16px; font-size:11px; color:var(--text3); }
+
+  /* ===== MAIN APP ===== */
+  #app { display:none; min-height:100vh; }
+  .layout { display:flex; min-height:100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:240px; min-height:100vh; background:var(--bg2); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; position:fixed; left:0; top:0; z-index:100;
+    transition:transform 0.3s;
+  }
+  .sidebar-logo { padding:20px 20px 16px; border-bottom:1px solid var(--border); }
+  .sidebar-logo .brand { font-size:18px; font-weight:700; color:#fff; }
+  .sidebar-logo .brand span { color:var(--accent2); }
+  .sidebar-logo .role-badge {
+    display:inline-block; margin-top:6px; padding:2px 10px; border-radius:20px;
+    font-size:10px; font-family:var(--mono); font-weight:500; letter-spacing:0.05em;
+  }
+  .nav-section { padding:12px 0; border-bottom:1px solid var(--border); }
+  .nav-section-title { padding:0 20px 8px; font-size:10px; color:var(--text3); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.1em; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:8px 20px;
+    color:var(--text2); cursor:pointer; transition:all 0.15s; font-size:13px;
+  }
+  .nav-item:hover { background:rgba(37,99,235,0.1); color:#fff; }
+  .nav-item.active { background:rgba(37,99,235,0.2); color:var(--accent2); border-right:2px solid var(--accent2); }
+  .nav-item .icon { width:16px; text-align:center; font-size:14px; }
+  .sidebar-bottom { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); }
+  .user-info { display:flex; align-items:center; gap:10px; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; }
+  .user-name { font-size:13px; font-weight:500; }
+  .user-role { font-size:11px; color:var(--text3); }
+  .logout-btn { width:100%; margin-top:10px; padding:8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:6px; color:#ef4444; cursor:pointer; font-size:12px; font-family:var(--font); transition:all 0.2s; }
+  .logout-btn:hover { background:rgba(239,68,68,0.2); }
+
+  /* MAIN CONTENT */
+  .main { margin-left:240px; flex:1; padding:24px; min-height:100vh; }
+  .page-header { margin-bottom:24px; }
+  .page-header h1 { font-size:24px; font-weight:700; color:#fff; }
+  .page-header p { color:var(--text3); margin-top:4px; font-size:13px; }
+
+  /* CARDS */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+  .card-title { font-size:13px; font-weight:600; color:var(--text2); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+  .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:24px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); }
+  .stat-card.green::before { background:var(--green); }
+  .stat-card.yellow::before { background:var(--yellow); }
+  .stat-card.red::before { background:var(--red); }
+  .stat-card.purple::before { background:var(--purple); }
+  .stat-card.pink::before { background:var(--pink); }
+  .stat-label { font-size:11px; color:var(--text3); margin-bottom:8px; font-family:var(--mono); text-transform:uppercase; }
+  .stat-value { font-size:28px; font-weight:700; color:#fff; }
+  .stat-sub { font-size:11px; color:var(--text3); margin-top:4px; }
+
+  /* TABLES */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th { padding:10px 14px; text-align:left; font-size:11px; color:var(--text3); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border); }
+  td { padding:12px 14px; border-bottom:1px solid rgba(30,45,69,0.5); font-size:13px; color:var(--text); }
+  tr:hover td { background:rgba(37,99,235,0.05); }
+  .badge { display:inline-flex; align-items:center; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:500; }
+  .badge-green { background:rgba(16,185,129,0.15); color:#10b981; }
+  .badge-red { background:rgba(239,68,68,0.15); color:#ef4444; }
+  .badge-yellow { background:rgba(245,158,11,0.15); color:#f59e0b; }
+  .badge-blue { background:rgba(37,99,235,0.15); color:#60a5fa; }
+  .badge-purple { background:rgba(139,92,246,0.15); color:#a78bfa; }
+  .badge-gray { background:rgba(100,116,139,0.2); color:#94a3b8; }
+
+  /* BUTTONS */
+  .btn { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-family:var(--font); font-weight:500; transition:all 0.2s; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover { background:#1d4ed8; }
+  .btn-success { background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
+  .btn-danger { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+  .btn-sm { padding:5px 10px; font-size:11px; }
+  .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text2); }
+  .btn-outline:hover { border-color:var(--accent); color:#fff; }
+
+  /* FORMS */
+  .form-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label { font-size:11px; color:var(--text3); font-family:var(--mono); text-transform:uppercase; }
+  .field input, .field select, .field textarea {
+    padding:8px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:var(--font); font-size:13px; outline:none; transition:border 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--accent); }
+  .field select option { background:var(--bg2); }
+  .field textarea { min-height:80px; resize:vertical; }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px; width:600px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .modal-header h3 { font-size:16px; font-weight:600; }
+  .modal-close { background:none; border:none; color:var(--text3); font-size:20px; cursor:pointer; padding:4px; }
+  .modal-close:hover { color:#fff; }
+
+  /* STATUS DOT */
+  .dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+  .dot-green { background:#10b981; box-shadow:0 0 6px #10b981; }
+  .dot-red { background:#ef4444; box-shadow:0 0 6px #ef4444; }
+  .dot-yellow { background:#f59e0b; box-shadow:0 0 6px #f59e0b; }
+
+  /* TABS */
+  .tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--bg3); padding:4px; border-radius:10px; width:fit-content; }
+  .tab { padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; color:var(--text3); transition:all 0.2s; }
+  .tab.active { background:var(--accent); color:#fff; }
+
+  /* SECTION PAGES */
+  .section { display:none; }
+  .section.active { display:block; }
+
+  /* NETWORK MONITOR */
+  .device-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+  .device-card { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:16px; position:relative; }
+  .device-card .device-name { font-weight:600; font-size:14px; margin-bottom:4px; }
+  .device-card .device-ip { font-family:var(--mono); font-size:11px; color:var(--text3); }
+  .device-card .device-stats { margin-top:12px; display:flex; justify-content:space-between; font-size:11px; }
+  .device-card .up { color:var(--green); } .device-card .down { color:var(--accent2); }
+
+  /* PROGRESS BAR */
+  .progress { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:6px; }
+  .progress-fill { height:100%; border-radius:3px; transition:width 0.5s; }
+
+  /* NOTIFICATIONS */
+  .notif-bar { position:fixed; top:16px; right:16px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+  .notif { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; font-size:13px; min-width:260px; box-shadow:0 8px 24px rgba(0,0,0,0.4); animation:slideIn 0.3s ease; }
+  .notif.success { border-color:rgba(16,185,129,0.4); }
+  .notif.error { border-color:rgba(239,68,68,0.4); }
+  @keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+  /* DASHBOARD WIDGETS */
+  .activity-item { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid rgba(30,45,69,0.5); }
+  .activity-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .activity-text { font-size:13px; }
+  .activity-time { font-size:11px; color:var(--text3); margin-top:2px; }
+
+  /* LETTER PREVIEW */
+  .letter-preview { background:#fff; color:#111; padding:40px; border-radius:8px; font-family:'Times New Roman', serif; line-height:1.6; }
+  .letter-preview h2 { color:#1a1a2e; font-size:18px; margin-bottom:20px; }
+
+  /* RESPONSIVE */
+  @media(max-width:768px) {
+    .sidebar { transform:translateX(-100%); }
+    .main { margin-left:0; }
+    .grid-4, .grid-3 { grid-template-columns:1fr 1fr; }
+    .sidebar.open { transform:translateX(0); }
+  }
+
+  /* SECTION COLOR ACCENTS */
+  .section-payroll .stat-card::before { background:var(--green); }
+  .section-asset .stat-card::before { background:var(--purple); }
+  .section-network .stat-card::before { background:var(--accent2); }
+  .section-hr .stat-card::before { background:var(--pink); }
+
+  .empty-state { text-align:center; padding:48px 20px; color:var(--text3); }
+  .empty-state .icon { font-size:48px; margin-bottom:12px; }
+
+  .inline-actions { display:flex; gap:6px; }
+
+  .search-bar { display:flex; gap:10px; margin-bottom:16px; }
+  .search-bar input { flex:1; padding:8px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font); outline:none; }
+  .search-bar input:focus { border-color:var(--accent); }
+
+  /* TOPBAR */
+  .topbar { position:fixed; top:0; left:240px; right:0; height:56px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 24px; z-index:50; }
+  .topbar-left { display:flex; align-items:center; gap:12px; }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .topbar-title { font-size:15px; font-weight:600; }
+  .main { margin-top:56px; }
+
+  @media(max-width:768px) { .topbar { left:0; } }
+</style>
+</head>
+<body>
+
+<!-- NOTIFICATIONS -->
+<div class="notif-bar" id="notifBar"></div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="brand">Enterprise<span>Hub</span></div>
+      <div class="sub">Unified Management Portal • India Edition</div>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:12px;text-align:center;">Select your role to login</p>
+    <div class="role-grid">
+      <button class="role-btn active" onclick="selectRole(this,'admin')" data-role="admin">🛡️ Admin</button>
+      <button class="role-btn" onclick="selectRole(this,'hr')" data-role="hr">👥 HR</button>
+      <button class="role-btn" onclick="selectRole(this,'payroll')" data-role="payroll">💰 Payroll / Finance</button>
+      <button class="role-btn" onclick="selectRole(this,'network')" data-role="network">🌐 Network Monitoring</button>
+      <button class="role-btn" onclick="selectRole(this,'it')" data-role="it">🖥️ IT Support</button>
+    </div>
+    <div class="form-group">
+      <label>Username / Email</label>
+      <input type="text" id="loginUser" placeholder="admin@company.com" value="admin@company.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" value="admin123">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-hint">Demo: any credentials work • Role controls visible modules</div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">Enterprise<span>Hub</span></div>
+      <span class="role-badge" id="roleBadge">Admin</span>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Overview</div>
+      <div class="nav-item active" onclick="showSection('dashboard',this)">
+        <span class="icon">📊</span> Dashboard
+      </div>
+    </div>
+
+    <div class="nav-section" id="navPayroll">
+      <div class="nav-section-title">Payroll & Finance</div>
+      <div class="nav-item" onclick="showSection('payroll-emp',this)"><span class="icon">👤</span> Employee Payroll</div>
+      <div class="nav-item" onclick="showSection('payroll-tx',this)"><span class="icon">💳</span> Transactions</div>
+      <div class="nav-item" onclick="showSection('payroll-gst',this)"><span class="icon">📋</span> GST Management</div>
+      <div class="nav-item" onclick="showSection('payroll-itr',this)"><span class="icon">📄</span> ITR / Tax Filing</div>
+      <div class="nav-item" onclick="showSection('payroll-sal',this)"><span class="icon">💵</span> Salary Slip</div>
+    </div>
+
+    <div class="nav-section" id="navAsset">
+      <div class="nav-section-title">Asset Management</div>
+      <div class="nav-item" onclick="showSection('asset-list',this)"><span class="icon">🖥️</span> All Assets</div>
+      <div class="nav-item" onclick="showSection('asset-user',this)"><span class="icon">👥</span> User Assignment</div>
+      <div class="nav-item" onclick="showSection('asset-ticket',this)"><span class="icon">🎫</span> Ticketing</div>
+    </div>
+
+    <div class="nav-section" id="navNetwork">
+      <div class="nav-section-title">Network Monitoring</div>
+      <div class="nav-item" onclick="showSection('net-devices',this)"><span class="icon">📡</span> Devices</div>
+      <div class="nav-item" onclick="showSection('net-status',this)"><span class="icon">🟢</span> Link Status</div>
+      <div class="nav-item" onclick="showSection('net-alerts',this)"><span class="icon">🔔</span> Alert Config</div>
+    </div>
+
+    <div class="nav-section" id="navHR">
+      <div class="nav-section-title">HR Management</div>
+      <div class="nav-item" onclick="showSection('hr-emp',this)"><span class="icon">🪪</span> Employees</div>
+      <div class="nav-item" onclick="showSection('hr-letters',this)"><span class="icon">✉️</span> Letters & Comms</div>
+      <div class="nav-item" onclick="showSection('hr-leaves',this)"><span class="icon">📅</span> Leave Management</div>
+      <div class="nav-item" onclick="showSection('hr-wishes',this)"><span class="icon">🎂</span> Wishes & Events</div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-info">
+        <div class="avatar" id="avatarEl">A</div>
+        <div>
+          <div class="user-name" id="userNameEl">Admin User</div>
+          <div class="user-role" id="userRoleEl">Super Admin</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">⬡ Logout</button>
+    </div>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span id="topbarTitle" class="topbar-title">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <span style="font-size:12px;color:var(--text3);font-family:var(--mono)" id="clockEl"></span>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)"></div>
+      <span style="font-size:11px;color:var(--text3)">Live</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="section active" id="sec-dashboard">
+      <div class="page-header">
+        <h1>Good Morning 👋</h1>
+        <p>Here's your enterprise overview for today</p>
+      </div>
+      <div class="grid-4">
+        <div class="stat-card"><div class="stat-label">Total Employees</div><div class="stat-value">247</div><div class="stat-sub">↑ 3 this month</div></div>
+        <div class="stat-card green"><div class="stat-label">Monthly Payroll</div><div class="stat-value">₹38.4L</div><div class="stat-sub">Processed for April</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Total Assets</div><div class="stat-value">612</div><div class="stat-sub">48 unassigned</div></div>
+        <div class="stat-card red"><div class="stat-label">Open Tickets</div><div class="stat-value">14</div><div class="stat-sub">3 critical</div></div>
+      </div>
+      <div class="grid-4">
+        <div class="stat-card purple"><div class="stat-label">Devices Online</div><div class="stat-value">98%</div><div class="stat-sub">2 devices down</div></div>
+        <div class="stat-card"><div class="stat-label">GST Due</div><div class="stat-value">₹2.1L</div><div class="stat-sub">Due: 20th April</div></div>
+        <div class="stat-card green"><div class="stat-label">Leaves Pending</div><div class="stat-value">7</div><div class="stat-sub">Awaiting approval</div></div>
+        <div class="stat-card pink"><div class="stat-label">Birthdays Today</div><div class="stat-value">2</div><div class="stat-sub">Wishes sent ✓</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">📋 Recent Activity</div>
+          <div class="activity-item"><div class="activity-icon" style="background:rgba(16,185,129,0.15)">💰</div><div><div class="activity-text">Salary processed for March 2025</div><div class="activity-time">2 hours ago</div></div></div>
+          <div class="activity-item"><div class="activity-icon" style="background:rgba(139,92,246,0.15)">🖥️</div><div><div class="activity-text">Laptop L-0234 assigned to Rahul Sharma</div><div class="activity-time">4 hours ago</div></div></div>
+          <div class="activity-item"><div class="activity-icon" style="background:rgba(239,68,68,0.15)">🔴</div><div><div class="activity-text">Switch SW-03 link down — alert sent</div><div class="activity-time">6 hours ago</div></div></div>
+          <div class="activity-item"><div class="activity-icon" style="background:rgba(236,72,153,0.15)">🎂</div><div><div class="activity-text">Birthday wish sent to Priya Patel</div><div class="activity-time">Morning</div></div></div>
+          <div class="activity-item"><div class="activity-icon" style="background:rgba(37,99,235,0.15)">📄</div><div><div class="activity-text">Offer letter generated for new hire</div><div class="activity-time">Yesterday</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 Payroll Summary (Apr 2025)</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">Basic Salary</span><span style="font-size:12px;font-family:var(--mono)">₹24,80,000</span></div><div class="progress"><div class="progress-fill" style="width:80%;background:var(--green)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">HRA + Allowances</span><span style="font-size:12px;font-family:var(--mono)">₹8,20,000</span></div><div class="progress"><div class="progress-fill" style="width:55%;background:var(--accent2)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">TDS Deducted</span><span style="font-size:12px;font-family:var(--mono)">₹3,40,000</span></div><div class="progress"><div class="progress-fill" style="width:30%;background:var(--yellow)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">PF Contribution</span><span style="font-size:12px;font-family:var(--mono)">₹2,10,000</span></div><div class="progress"><div class="progress-fill" style="width:20%;background:var(--purple)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text2)">ESI Deduction</span><span style="font-size:12px;font-family:var(--mono)">₹54,000</span></div><div class="progress"><div class="progress-fill" style="width:10%;background:var(--pink)"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAYROLL: EMPLOYEE ===== -->
+    <div class="section" id="sec-payroll-emp">
+      <div class="page-header"><h1>💰 Employee Payroll</h1><p>Manage salary, CTC, and payment details for all employees</p></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Add / Edit Employee Payroll</div>
+        <div class="form-row">
+          <div class="field"><label>Emp ID</label><input placeholder="EMP-001"></div>
+          <div class="field"><label>Employee Name</label><input placeholder="Rahul Sharma"></div>
+          <div class="field"><label>Department</label><select><option>IT</option><option>HR</option><option>Finance</option><option>Operations</option><option>Sales</option></select></div>
+          <div class="field"><label>Basic Salary (₹)</label><input type="number" placeholder="45000"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>HRA (₹)</label><input type="number" placeholder="18000"></div>
+          <div class="field"><label>TA / DA (₹)</label><input type="number" placeholder="5000"></div>
+          <div class="field"><label>Special Allowance (₹)</label><input type="number" placeholder="8000"></div>
+          <div class="field"><label>PAN Number</label><input placeholder="ABCDE1234F"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>PF Account No.</label><input placeholder="MH/BAN/0000000/000/0000000"></div>
+          <div class="field"><label>ESI Number</label><input placeholder="12-00-000000-000-0000"></div>
+          <div class="field"><label>Bank Account</label><input placeholder="Account Number"></div>
+          <div class="field"><label>IFSC Code</label><input placeholder="SBIN0001234"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Tax Regime</label><select><option>New Regime</option><option>Old Regime</option></select></div>
+          <div class="field"><label>TDS (₹/month)</label><input type="number" placeholder="3500"></div>
+          <div class="field"><label>PT (Professional Tax)</label><input type="number" placeholder="200"></div>
+          <div class="field"><label>Payment Mode</label><select><option>Bank Transfer</option><option>Cheque</option><option>Cash</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Payroll record saved successfully','success')">💾 Save Payroll Record</button>
+        <button class="btn btn-outline" style="margin-left:8px" onclick="openSalarySlip()">🖨️ Generate Salary Slip</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Employee Payroll Register</div>
+        <div class="search-bar"><input placeholder="🔍 Search employee..."></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Emp ID</th><th>Name</th><th>Department</th><th>Basic (₹)</th><th>Gross (₹)</th><th>TDS (₹)</th><th>PF (₹)</th><th>Net Pay (₹)</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="payrollTable">
+              <tr><td>EMP-001</td><td>Rahul Sharma</td><td>IT</td><td>45,000</td><td>76,000</td><td>3,500</td><td>5,400</td><td>63,500</td><td><span class="badge badge-green">Paid</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-success">Slip</button></div></td></tr>
+              <tr><td>EMP-002</td><td>Priya Patel</td><td>HR</td><td>38,000</td><td>62,000</td><td>2,200</td><td>4,560</td><td>52,800</td><td><span class="badge badge-green">Paid</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-success">Slip</button></div></td></tr>
+              <tr><td>EMP-003</td><td>Amit Kumar</td><td>Finance</td><td>55,000</td><td>89,000</td><td>6,100</td><td>6,600</td><td>73,800</td><td><span class="badge badge-yellow">Pending</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-success">Slip</button></div></td></tr>
+              <tr><td>EMP-004</td><td>Sunita Gupta</td><td>Sales</td><td>30,000</td><td>49,000</td><td>1,200</td><td>3,600</td><td>41,800</td><td><span class="badge badge-green">Paid</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-success">Slip</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAYROLL: TRANSACTIONS ===== -->
+    <div class="section" id="sec-payroll-tx">
+      <div class="page-header"><h1>💳 Payment Transactions</h1><p>Track all salary and vendor payments</p></div>
+      <div class="grid-4">
+        <div class="stat-card green"><div class="stat-label">Total Paid (Apr)</div><div class="stat-value">₹38.4L</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Pending</div><div class="stat-value">₹4.2L</div></div>
+        <div class="stat-card"><div class="stat-label">TDS Deposited</div><div class="stat-value">₹3.1L</div></div>
+        <div class="stat-card purple"><div class="stat-label">PF Deposited</div><div class="stat-value">₹2.1L</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Add Transaction</div>
+        <div class="form-row">
+          <div class="field"><label>Transaction Type</label><select><option>Salary Payment</option><option>TDS Deposit</option><option>PF Deposit</option><option>ESI Deposit</option><option>GST Payment</option><option>Advance</option><option>Reimbursement</option></select></div>
+          <div class="field"><label>Amount (₹)</label><input type="number" placeholder="50000"></div>
+          <div class="field"><label>Date</label><input type="date"></div>
+          <div class="field"><label>Reference No.</label><input placeholder="UTR/Cheque No."></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>From Account</label><input placeholder="Company Bank Account"></div>
+          <div class="field"><label>Narration</label><input placeholder="April 2025 Salary - IT Dept"></div>
+          <div class="field"><label>Mode</label><select><option>NEFT</option><option>RTGS</option><option>IMPS</option><option>Cheque</option><option>Cash</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Transaction recorded','success')">💾 Save Transaction</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Transaction History</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Type</th><th>Amount (₹)</th><th>Mode</th><th>Reference</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>01 Apr 2025</td><td>Salary Payment</td><td>38,40,000</td><td>NEFT</td><td>UTR2025040100123</td><td><span class="badge badge-green">Success</span></td></tr>
+              <tr><td>07 Apr 2025</td><td>TDS Deposit</td><td>3,10,000</td><td>NEFT</td><td>CHALLAN0400124</td><td><span class="badge badge-green">Success</span></td></tr>
+              <tr><td>15 Apr 2025</td><td>PF Deposit</td><td>2,10,000</td><td>NEFT</td><td>EPFO20250415</td><td><span class="badge badge-green">Success</span></td></tr>
+              <tr><td>20 Apr 2025</td><td>GST Payment</td><td>2,10,000</td><td>NEFT</td><td>GST20250420</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GST ===== -->
+    <div class="section" id="sec-payroll-gst">
+      <div class="page-header"><h1>📋 GST Management</h1><p>GSTIN filing, returns, and compliance — as per India GST norms</p></div>
+      <div class="grid-3">
+        <div class="stat-card"><div class="stat-label">GSTIN</div><div class="stat-value" style="font-size:16px;font-family:var(--mono)">09ABCDE1234F1Z5</div><div class="stat-sub">Uttar Pradesh</div></div>
+        <div class="stat-card yellow"><div class="stat-label">GST Due (Apr)</div><div class="stat-value">₹2.1L</div><div class="stat-sub">Due: 20th April</div></div>
+        <div class="stat-card green"><div class="stat-label">Last Filed</div><div class="stat-value" style="font-size:18px">GSTR-3B</div><div class="stat-sub">March 2025 ✓</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Add GST Invoice</div>
+        <div class="form-row">
+          <div class="field"><label>Invoice No.</label><input placeholder="INV-2025-001"></div>
+          <div class="field"><label>Invoice Date</label><input type="date"></div>
+          <div class="field"><label>Party Name</label><input placeholder="Vendor / Customer name"></div>
+          <div class="field"><label>Party GSTIN</label><input placeholder="GSTIN of party"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Taxable Amount (₹)</label><input type="number" placeholder="100000"></div>
+          <div class="field"><label>GST Rate (%)</label><select><option>0%</option><option>5%</option><option>12%</option><option>18%</option><option>28%</option></select></div>
+          <div class="field"><label>CGST (₹)</label><input type="number" placeholder="9000"></div>
+          <div class="field"><label>SGST (₹)</label><input type="number" placeholder="9000"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>IGST (₹)</label><input type="number" placeholder="0"></div>
+          <div class="field"><label>Total Invoice (₹)</label><input type="number" placeholder="118000"></div>
+          <div class="field"><label>Type</label><select><option>B2B</option><option>B2C Large</option><option>B2C Small</option><option>Export</option></select></div>
+          <div class="field"><label>HSN/SAC Code</label><input placeholder="998314"></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('GST invoice saved','success')">💾 Save Invoice</button>
+      </div>
+      <div class="card">
+        <div class="card-title">GST Return Status</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Return Type</th><th>Period</th><th>Due Date</th><th>Filed Date</th><th>Tax Paid (₹)</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>GSTR-1</td><td>Mar 2025</td><td>11 Apr 2025</td><td>09 Apr 2025</td><td>—</td><td><span class="badge badge-green">Filed</span></td></tr>
+              <tr><td>GSTR-3B</td><td>Mar 2025</td><td>20 Apr 2025</td><td>18 Apr 2025</td><td>₹1,86,000</td><td><span class="badge badge-green">Filed</span></td></tr>
+              <tr><td>GSTR-1</td><td>Apr 2025</td><td>11 May 2025</td><td>—</td><td>—</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+              <tr><td>GSTR-3B</td><td>Apr 2025</td><td>20 May 2025</td><td>—</td><td>—</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ITR ===== -->
+    <div class="section" id="sec-payroll-itr">
+      <div class="page-header"><h1>📄 ITR / Income Tax</h1><p>Employee TDS, Form 16, and ITR filing management</p></div>
+      <div class="grid-4">
+        <div class="stat-card"><div class="stat-label">FY 2024-25</div><div class="stat-value" style="font-size:18px">Active</div></div>
+        <div class="stat-card green"><div class="stat-label">Total TDS (FY)</div><div class="stat-value">₹18.4L</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Form 16 Pending</div><div class="stat-value">12</div></div>
+        <div class="stat-card purple"><div class="stat-label">TAN</div><div class="stat-value" style="font-size:16px;font-family:var(--mono)">DELA12345G</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Employee Tax Computation</div>
+        <div class="form-row">
+          <div class="field"><label>Employee</label><select><option>EMP-001 Rahul Sharma</option><option>EMP-002 Priya Patel</option><option>EMP-003 Amit Kumar</option></select></div>
+          <div class="field"><label>FY</label><select><option>2024-25</option><option>2023-24</option></select></div>
+          <div class="field"><label>Tax Regime</label><select><option>New Regime (default)</option><option>Old Regime</option></select></div>
+          <div class="field"><label>80C Investment (₹)</label><input type="number" placeholder="150000"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>80D (Health Ins.) (₹)</label><input type="number" placeholder="25000"></div>
+          <div class="field"><label>HRA Exempt (₹)</label><input type="number" placeholder="120000"></div>
+          <div class="field"><label>LTA (₹)</label><input type="number" placeholder="20000"></div>
+          <div class="field"><label>Other Deductions (₹)</label><input type="number" placeholder="10000"></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Tax computation saved. Form 16 ready to generate.','success')">📊 Compute Tax</button>
+        <button class="btn btn-outline" style="margin-left:8px" onclick="showNotif('Form 16 generated and emailed','success')">📧 Generate Form 16</button>
+        <button class="btn btn-outline" style="margin-left:8px" onclick="showNotif('24Q TDS Return prepared','success')">📤 Prepare 24Q</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Challan / TDS Deposit Register</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Month</th><th>TDS Amount (₹)</th><th>Challan No.</th><th>BSR Code</th><th>Deposit Date</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Jan 2025</td><td>3,20,000</td><td>CHALLAN01/2025</td><td>0000000</td><td>07 Feb 2025</td><td><span class="badge badge-green">Deposited</span></td></tr>
+              <tr><td>Feb 2025</td><td>3,10,000</td><td>CHALLAN02/2025</td><td>0000000</td><td>07 Mar 2025</td><td><span class="badge badge-green">Deposited</span></td></tr>
+              <tr><td>Mar 2025</td><td>3,40,000</td><td>CHALLAN03/2025</td><td>0000000</td><td>07 Apr 2025</td><td><span class="badge badge-green">Deposited</span></td></tr>
+              <tr><td>Apr 2025</td><td>3,50,000</td><td>—</td><td>—</td><td>—</td><td><span class="badge badge-yellow">Due 7 May</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SALARY SLIP ===== -->
+    <div class="section" id="sec-payroll-sal">
+      <div class="page-header"><h1>💵 Salary Slip Generator</h1><p>Generate and email salary slips</p></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Generate Salary Slip</div>
+          <div class="field" style="margin-bottom:12px"><label>Select Employee</label><select id="slipEmp"><option>EMP-001 — Rahul Sharma</option><option>EMP-002 — Priya Patel</option><option>EMP-003 — Amit Kumar</option></select></div>
+          <div class="field" style="margin-bottom:12px"><label>Month/Year</label><input type="month" value="2025-04"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="renderSalarySlip()">🖨️ Preview Slip</button>
+            <button class="btn btn-outline" onclick="showNotif('Salary slip emailed to employee','success')">📧 Email Slip</button>
+          </div>
+        </div>
+        <div class="card" id="slipPreview">
+          <div class="card-title">Preview</div>
+          <div style="text-align:center;color:var(--text3);padding:32px">Click "Preview Slip" to generate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ASSET LIST ===== -->
+    <div class="section" id="sec-asset-list">
+      <div class="page-header"><h1>🖥️ Asset Inventory</h1><p>All enterprise hardware and device tracking</p></div>
+      <div class="grid-4">
+        <div class="stat-card purple"><div class="stat-label">Laptops</div><div class="stat-value">142</div></div>
+        <div class="stat-card"><div class="stat-label">Desktops</div><div class="stat-value">85</div></div>
+        <div class="stat-card green"><div class="stat-label">Servers</div><div class="stat-value">18</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Network Devices</div><div class="stat-value">67</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Add New Asset</div>
+        <div class="form-row">
+          <div class="field"><label>Asset Tag</label><input placeholder="AST-0001"></div>
+          <div class="field"><label>Type</label><select><option>Laptop</option><option>Desktop</option><option>Server</option><option>Switch</option><option>Router</option><option>Firewall</option><option>Phone</option><option>UPS</option><option>Printer</option><option>IP Camera</option></select></div>
+          <div class="field"><label>Brand / Model</label><input placeholder="Dell Latitude 5530"></div>
+          <div class="field"><label>Serial No.</label><input placeholder="SN123456789"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>MAC Address</label><input placeholder="AA:BB:CC:DD:EE:FF"></div>
+          <div class="field"><label>IP Address</label><input placeholder="192.168.1.100"></div>
+          <div class="field"><label>Purchase Date</label><input type="date"></div>
+          <div class="field"><label>Purchase Price (₹)</label><input type="number" placeholder="65000"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Warranty Until</label><input type="date"></div>
+          <div class="field"><label>Location</label><input placeholder="Floor 2 - IT Dept"></div>
+          <div class="field"><label>Assigned To</label><input placeholder="Emp ID or Unassigned"></div>
+          <div class="field"><label>Status</label><select><option>Active</option><option>In Repair</option><option>Retired</option><option>Lost</option><option>In Store</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Asset added to inventory','success')">💾 Add Asset</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Asset Register</div>
+        <div class="search-bar">
+          <input placeholder="🔍 Search by tag, model, serial...">
+          <select style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);outline:none">
+            <option>All Types</option><option>Laptop</option><option>Desktop</option><option>Server</option><option>Switch</option><option>Router</option><option>Phone</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tag</th><th>Type</th><th>Model</th><th>Serial No.</th><th>Assigned To</th><th>Location</th><th>Warranty</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>AST-001</td><td>Laptop</td><td>Dell Latitude 5530</td><td>SN123456</td><td>EMP-001 Rahul</td><td>Floor 2</td><td>Dec 2026</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+              <tr><td>AST-002</td><td>Server</td><td>HP ProLiant DL380</td><td>SN789012</td><td>IT Admin</td><td>Server Room</td><td>Mar 2027</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+              <tr><td>AST-003</td><td>Switch</td><td>Cisco Catalyst 2960</td><td>SN345678</td><td>Network</td><td>Floor 1 Rack</td><td>Expired</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+              <tr><td>AST-004</td><td>Laptop</td><td>Lenovo ThinkPad E14</td><td>SN901234</td><td>—</td><td>Store Room</td><td>Jun 2026</td><td><span class="badge badge-gray">In Store</span></td><td><button class="btn btn-sm btn-outline">Assign</button></td></tr>
+              <tr><td>AST-005</td><td>Desktop</td><td>HP EliteDesk 800</td><td>SN567890</td><td>EMP-002 Priya</td><td>HR Dept</td><td>Feb 2025</td><td><span class="badge badge-yellow">In Repair</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ASSET USER MGMT ===== -->
+    <div class="section" id="sec-asset-user">
+      <div class="page-header"><h1>👥 User & Role Management</h1><p>Portal user accounts and role assignments</p></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Create Portal User</div>
+        <div class="form-row">
+          <div class="field"><label>Full Name</label><input placeholder="Ramesh Kumar"></div>
+          <div class="field"><label>Email</label><input placeholder="ramesh@company.com"></div>
+          <div class="field"><label>Role</label><select><option>Admin</option><option>HR</option><option>Payroll / Finance</option><option>Network Monitoring</option><option>IT Support</option><option>Employee (View Only)</option></select></div>
+          <div class="field"><label>Department</label><select><option>IT</option><option>HR</option><option>Finance</option><option>Operations</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Password</label><input type="password" placeholder="Set password"></div>
+          <div class="field"><label>Employee ID</label><input placeholder="EMP-XXX"></div>
+          <div class="field"><label>Access Modules</label><select multiple style="height:80px"><option selected>Dashboard</option><option>Payroll</option><option>Assets</option><option>Network</option><option>HR</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('User created and credentials sent','success')">➕ Create User</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Portal Users</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Last Login</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>Admin User</td><td>admin@company.com</td><td><span class="badge badge-blue">Admin</span></td><td>IT</td><td>Today 09:15</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+              <tr><td>Priya Patel</td><td>priya@company.com</td><td><span class="badge badge-pink" style="background:rgba(236,72,153,0.15);color:#ec4899">HR</span></td><td>HR</td><td>Today 08:45</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+              <tr><td>Amit Kumar</td><td>amit@company.com</td><td><span class="badge badge-yellow">Finance</span></td><td>Finance</td><td>Yesterday</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+              <tr><td>Network Ops</td><td>netops@company.com</td><td><span class="badge badge-purple">Network</span></td><td>IT</td><td>2 days ago</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TICKETING ===== -->
+    <div class="section" id="sec-asset-ticket">
+      <div class="page-header"><h1>🎫 IT Ticketing System</h1><p>Enterprise-grade asset & IT support tickets</p></div>
+      <div class="grid-4">
+        <div class="stat-card red"><div class="stat-label">Open</div><div class="stat-value">14</div></div>
+        <div class="stat-card yellow"><div class="stat-label">In Progress</div><div class="stat-value">7</div></div>
+        <div class="stat-card green"><div class="stat-label">Resolved (Apr)</div><div class="stat-value">43</div></div>
+        <div class="stat-card purple"><div class="stat-label">SLA Breached</div><div class="stat-value">2</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Raise New Ticket</div>
+        <div class="form-row">
+          <div class="field"><label>Ticket Title</label><input placeholder="Laptop not booting"></div>
+          <div class="field"><label>Category</label><select><option>Hardware</option><option>Software</option><option>Network</option><option>Access Request</option><option>Email Issue</option><option>Printer</option><option>Other</option></select></div>
+          <div class="field"><label>Priority</label><select><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></div>
+          <div class="field"><label>Asset Tag</label><input placeholder="AST-001 (if applicable)"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Raised By</label><input placeholder="Emp ID or Name"></div>
+          <div class="field"><label>Assigned To</label><input placeholder="IT Engineer name"></div>
+          <div class="field"><label>Description</label><textarea placeholder="Describe the issue in detail..."></textarea></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Ticket TKT-' + Math.floor(Math.random()*9000+1000) + ' raised successfully','success')">🎫 Raise Ticket</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Ticket Queue</div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this)">All</div>
+          <div class="tab" onclick="switchTab(this)">Open</div>
+          <div class="tab" onclick="switchTab(this)">In Progress</div>
+          <div class="tab" onclick="switchTab(this)">Resolved</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ticket ID</th><th>Title</th><th>Category</th><th>Priority</th><th>Raised By</th><th>Assigned</th><th>Created</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>TKT-1001</td><td>Laptop screen flickering</td><td>Hardware</td><td><span class="badge badge-yellow">High</span></td><td>Rahul Sharma</td><td>Sunil IT</td><td>19 Apr</td><td><span class="badge badge-blue">In Progress</span></td></tr>
+              <tr><td>TKT-1002</td><td>VPN not connecting</td><td>Network</td><td><span class="badge badge-red">Critical</span></td><td>Sales Team</td><td>Net Ops</td><td>18 Apr</td><td><span class="badge badge-red">Open</span></td></tr>
+              <tr><td>TKT-1003</td><td>Email access needed</td><td>Access Request</td><td><span class="badge badge-gray">Low</span></td><td>New Hire</td><td>Admin</td><td>17 Apr</td><td><span class="badge badge-green">Resolved</span></td></tr>
+              <tr><td>TKT-1004</td><td>Printer offline</td><td>Printer</td><td><span class="badge badge-yellow">Medium</span></td><td>Priya Patel</td><td>Sunil IT</td><td>16 Apr</td><td><span class="badge badge-red">Open</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NETWORK DEVICES ===== -->
+    <div class="section" id="sec-net-devices">
+      <div class="page-header"><h1>📡 Network Devices</h1><p>Add and manage all network infrastructure devices</p></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Add Device</div>
+        <div class="form-row">
+          <div class="field"><label>Device Name</label><input placeholder="Core-Switch-01"></div>
+          <div class="field"><label>Type</label><select><option>Server</option><option>Switch</option><option>Router</option><option>Firewall</option><option>Access Point</option><option>NAS</option><option>Workstation</option></select></div>
+          <div class="field"><label>IP Address</label><input placeholder="192.168.1.1"></div>
+          <div class="field"><label>Location</label><input placeholder="DC Rack A1"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>SNMP Community</label><input placeholder="public"></div>
+          <div class="field"><label>Ping Interval (s)</label><input type="number" placeholder="30"></div>
+          <div class="field"><label>Alert on Down</label><select><option>Email + WhatsApp + Telegram</option><option>Email Only</option><option>WhatsApp Only</option><option>Telegram Only</option></select></div>
+          <div class="field"><label>SLA Uptime (%)</label><input type="number" placeholder="99.9"></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Device added to monitoring','success')">📡 Add Device</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Device List</div>
+        <div class="device-grid" id="deviceGrid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NETWORK STATUS ===== -->
+    <div class="section" id="sec-net-status">
+      <div class="page-header"><h1>🟢 Link Status Monitor</h1><p>Live uplink/downlink status of all network links</p></div>
+      <div class="grid-4">
+        <div class="stat-card green"><div class="stat-label">Links Up</div><div class="stat-value">24</div></div>
+        <div class="stat-card red"><div class="stat-label">Links Down</div><div class="stat-value">2</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Degraded</div><div class="stat-value">1</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Latency</div><div class="stat-value">4ms</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔴 Live Link Status</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Device</th><th>Interface</th><th>Speed</th><th>Link</th><th>Uplink (Mbps)</th><th>Downlink (Mbps)</th><th>Latency</th><th>Uptime</th><th>Status</th></tr></thead>
+            <tbody id="linkTable">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NETWORK ALERTS ===== -->
+    <div class="section" id="sec-net-alerts">
+      <div class="page-header"><h1>🔔 Alert Configuration</h1><p>Configure WhatsApp, Email & Telegram alerts for network events</p></div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">📧 Email Alerts</div>
+          <div class="field" style="margin-bottom:12px"><label>SMTP Host</label><input placeholder="smtp.gmail.com"></div>
+          <div class="field" style="margin-bottom:12px"><label>SMTP Port</label><input placeholder="587"></div>
+          <div class="field" style="margin-bottom:12px"><label>From Email</label><input placeholder="alerts@company.com"></div>
+          <div class="field" style="margin-bottom:12px"><label>To Email(s)</label><input placeholder="admin@company.com, it@company.com"></div>
+          <button class="btn btn-primary" onclick="showNotif('Email alert config saved','success')">💾 Save</button>
+          <button class="btn btn-outline" style="margin-top:8px;width:100%" onclick="showNotif('Test email sent!','success')">📤 Send Test</button>
+        </div>
+        <div class="card">
+          <div class="card-title">💬 WhatsApp Alerts</div>
+          <div class="field" style="margin-bottom:12px"><label>WhatsApp API Token</label><input placeholder="Your API token (Twilio/WATI)"></div>
+          <div class="field" style="margin-bottom:12px"><label>Phone Numbers</label><input placeholder="+91-XXXXXXXXXX, +91-XXXXXXXXXX"></div>
+          <div class="field" style="margin-bottom:12px"><label>Alert Template</label><textarea placeholder="⚠️ {device} is DOWN at {time}. IP: {ip}. Check immediately."></textarea></div>
+          <button class="btn btn-primary" onclick="showNotif('WhatsApp config saved','success')">💾 Save</button>
+          <button class="btn btn-outline" style="margin-top:8px;width:100%" onclick="showNotif('WhatsApp test sent!','success')">📤 Send Test</button>
+        </div>
+        <div class="card">
+          <div class="card-title">✈️ Telegram Alerts</div>
+          <div class="field" style="margin-bottom:12px"><label>Bot Token</label><input placeholder="1234567890:ABC-telegram-bot-token"></div>
+          <div class="field" style="margin-bottom:12px"><label>Chat ID(s)</label><input placeholder="-1001234567890"></div>
+          <div class="field" style="margin-bottom:12px"><label>Alert Format</label><textarea placeholder="🔴 ALERT: {device}\nStatus: DOWN\nTime: {time}\nIP: {ip}"></textarea></div>
+          <button class="btn btn-primary" onclick="showNotif('Telegram config saved','success')">💾 Save</button>
+          <button class="btn btn-outline" style="margin-top:8px;width:100%" onclick="showNotif('Telegram test sent!','success')">📤 Send Test</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Alert Rules</div>
+        <div class="form-row">
+          <div class="field"><label>Event</label><select><option>Device Down</option><option>Device Up</option><option>High Latency (&gt;100ms)</option><option>Packet Loss &gt; 5%</option><option>Interface Down</option><option>Bandwidth &gt; 90%</option></select></div>
+          <div class="field"><label>Channel</label><select><option>All Channels</option><option>Email</option><option>WhatsApp</option><option>Telegram</option></select></div>
+          <div class="field"><label>Severity</label><select><option>Critical</option><option>Warning</option><option>Info</option></select></div>
+          <div class="field"><label>Cooldown (min)</label><input type="number" placeholder="5"></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Alert rule saved','success')">➕ Add Rule</button>
+      </div>
+    </div>
+
+    <!-- ===== HR EMPLOYEES ===== -->
+    <div class="section" id="sec-hr-emp">
+      <div class="page-header"><h1>🪪 Employee Management</h1><p>Complete employee directory and lifecycle management</p></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Add New Employee</div>
+        <div class="form-row">
+          <div class="field"><label>Emp ID</label><input placeholder="EMP-XXX" id="newEmpId"></div>
+          <div class="field"><label>First Name</label><input placeholder="Rahul" id="newEmpFN"></div>
+          <div class="field"><label>Last Name</label><input placeholder="Sharma"></div>
+          <div class="field"><label>Date of Birth</label><input type="date" id="newEmpDob"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Gender</label><select><option>Male</option><option>Female</option><option>Other</option></select></div>
+          <div class="field"><label>Email (Personal)</label><input placeholder="rahul@gmail.com"></div>
+          <div class="field"><label>Email (Office)</label><input placeholder="rahul@company.com"></div>
+          <div class="field"><label>Mobile</label><input placeholder="+91-XXXXXXXXXX"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Department</label><select><option>IT</option><option>HR</option><option>Finance</option><option>Operations</option><option>Sales</option><option>Admin</option></select></div>
+          <div class="field"><label>Designation</label><input placeholder="Software Engineer"></div>
+          <div class="field"><label>Date of Joining</label><input type="date" id="newEmpDoj"></div>
+          <div class="field"><label>Reporting Manager</label><input placeholder="Manager Name / ID"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Aadhar Number</label><input placeholder="XXXX XXXX XXXX"></div>
+          <div class="field"><label>PAN Number</label><input placeholder="ABCDE1234F"></div>
+          <div class="field"><label>Emergency Contact</label><input placeholder="Name / +91-XXXXXXXXXX"></div>
+          <div class="field"><label>Address</label><textarea style="height:40px" placeholder="Residential address"></textarea></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Employee EMP-248 added successfully','success')">➕ Add Employee</button>
+        <button class="btn btn-outline" style="margin-left:8px" onclick="showNotif('Offer letter generated','success')">📄 Generate Offer Letter</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Employee Directory</div>
+        <div class="search-bar"><input placeholder="🔍 Search by name, emp ID, department..."></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Emp ID</th><th>Name</th><th>Department</th><th>Designation</th><th>DOJ</th><th>Email</th><th>Mobile</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>EMP-001</td><td>Rahul Sharma</td><td>IT</td><td>Sr. Engineer</td><td>01 Jan 2022</td><td>rahul@company.com</td><td>+91-9876543210</td><td><span class="badge badge-green">Active</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-danger">Remove</button></div></td></tr>
+              <tr><td>EMP-002</td><td>Priya Patel</td><td>HR</td><td>HR Manager</td><td>15 Mar 2021</td><td>priya@company.com</td><td>+91-9876543211</td><td><span class="badge badge-green">Active</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-danger">Remove</button></div></td></tr>
+              <tr><td>EMP-003</td><td>Amit Kumar</td><td>Finance</td><td>Finance Lead</td><td>10 Jun 2020</td><td>amit@company.com</td><td>+91-9876543212</td><td><span class="badge badge-green">Active</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-danger">Remove</button></div></td></tr>
+              <tr><td>EMP-004</td><td>Sunita Gupta</td><td>Sales</td><td>Sales Exec</td><td>01 Sep 2023</td><td>sunita@company.com</td><td>+91-9876543213</td><td><span class="badge badge-green">Active</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-danger">Remove</button></div></td></tr>
+              <tr><td>EMP-005</td><td>Vikram Rao</td><td>IT</td><td>Network Eng.</td><td>05 Feb 2019</td><td>vikram@company.com</td><td>+91-9876543214</td><td><span class="badge badge-gray">On Leave</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-outline">Edit</button><button class="btn btn-sm btn-danger">Remove</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HR LETTERS ===== -->
+    <div class="section" id="sec-hr-letters">
+      <div class="page-header"><h1>✉️ Letters & Communications</h1><p>Generate and email HR letters via company email</p></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Generate Letter</div>
+          <div class="field" style="margin-bottom:12px"><label>Letter Type</label>
+            <select id="letterType" onchange="updateLetterFields()">
+              <option value="offer">Offer Letter</option>
+              <option value="warning">Warning Letter</option>
+              <option value="appraisal">Appraisal Letter</option>
+              <option value="appreciation">Appreciation Letter</option>
+              <option value="experience">Experience Letter</option>
+              <option value="relieving">Relieving Letter</option>
+              <option value="increment">Increment Letter</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:12px"><label>Employee</label>
+            <select id="letterEmp">
+              <option>EMP-001 — Rahul Sharma</option>
+              <option>EMP-002 — Priya Patel</option>
+              <option>EMP-003 — Amit Kumar</option>
+            </select>
+          </div>
+          <div id="letterExtraFields">
+            <div class="field" style="margin-bottom:12px"><label>Designation Offered</label><input placeholder="Software Engineer" id="lf1"></div>
+            <div class="field" style="margin-bottom:12px"><label>CTC (Annual ₹)</label><input placeholder="600000" id="lf2"></div>
+            <div class="field" style="margin-bottom:12px"><label>Joining Date</label><input type="date" id="lf3"></div>
+          </div>
+          <div class="field" style="margin-bottom:12px"><label>Company Email (From)</label><input placeholder="hr@company.com" value="hr@company.com"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <button class="btn btn-primary" onclick="previewLetter()">👁️ Preview</button>
+            <button class="btn btn-outline" onclick="showNotif('Letter emailed to employee','success')">📧 Email</button>
+            <button class="btn btn-outline" onclick="showNotif('Letter downloaded','success')">⬇️ Download PDF</button>
+          </div>
+        </div>
+        <div class="card" id="letterPreviewCard">
+          <div class="card-title">Letter Preview</div>
+          <div id="letterPreviewContent" style="color:var(--text3);text-align:center;padding:32px">Select type and click Preview</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HR LEAVES ===== -->
+    <div class="section" id="sec-hr-leaves">
+      <div class="page-header"><h1>📅 Leave Management</h1><p>Employee leave requests, approval and balance</p></div>
+      <div class="grid-4">
+        <div class="stat-card yellow"><div class="stat-label">Pending Approval</div><div class="stat-value">7</div></div>
+        <div class="stat-card green"><div class="stat-label">Approved (Apr)</div><div class="stat-value">23</div></div>
+        <div class="stat-card red"><div class="stat-label">Rejected (Apr)</div><div class="stat-value">3</div></div>
+        <div class="stat-card"><div class="stat-label">On Leave Today</div><div class="stat-value">5</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Apply Leave</div>
+        <div class="form-row">
+          <div class="field"><label>Employee</label><select><option>EMP-001 Rahul Sharma</option><option>EMP-002 Priya Patel</option><option>EMP-003 Amit Kumar</option></select></div>
+          <div class="field"><label>Leave Type</label><select><option>Casual Leave</option><option>Sick Leave</option><option>Earned Leave</option><option>Maternity Leave</option><option>Paternity Leave</option><option>LOP</option></select></div>
+          <div class="field"><label>From Date</label><input type="date"></div>
+          <div class="field"><label>To Date</label><input type="date"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Reason</label><textarea placeholder="Brief reason for leave..."></textarea></div>
+        </div>
+        <button class="btn btn-primary" onclick="showNotif('Leave application submitted','success')">📤 Apply Leave</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Leave Requests</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Emp ID</th><th>Name</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>EMP-005</td><td>Vikram Rao</td><td>Sick Leave</td><td>18 Apr</td><td>21 Apr</td><td>3</td><td>Fever</td><td><span class="badge badge-green">Approved</span></td><td>—</td></tr>
+              <tr><td>EMP-004</td><td>Sunita Gupta</td><td>Casual Leave</td><td>22 Apr</td><td>22 Apr</td><td>1</td><td>Personal</td><td><span class="badge badge-yellow">Pending</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-success" onclick="showNotif('Leave approved','success')">✓</button><button class="btn btn-sm btn-danger" onclick="showNotif('Leave rejected','error')">✗</button></div></td></tr>
+              <tr><td>EMP-001</td><td>Rahul Sharma</td><td>Earned Leave</td><td>28 Apr</td><td>30 Apr</td><td>3</td><td>Family trip</td><td><span class="badge badge-yellow">Pending</span></td><td><div class="inline-actions"><button class="btn btn-sm btn-success" onclick="showNotif('Leave approved','success')">✓</button><button class="btn btn-sm btn-danger" onclick="showNotif('Leave rejected','error')">✗</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HR WISHES ===== -->
+    <div class="section" id="sec-hr-wishes">
+      <div class="page-header"><h1>🎂 Wishes & Events</h1><p>Birthday, anniversary and celebration messages via email</p></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🎂 Today's Birthdays</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg3);border-radius:8px">
+              <div><div style="font-weight:600">Priya Patel</div><div style="font-size:11px;color:var(--text3)">EMP-002 • HR Manager</div></div>
+              <button class="btn btn-sm btn-primary" onclick="showNotif('Birthday wish sent to Priya Patel 🎂','success')">🎉 Send Wish</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg3);border-radius:8px">
+              <div><div style="font-weight:600">Mohit Singh</div><div style="font-size:11px;color:var(--text3)">EMP-018 • Developer</div></div>
+              <button class="btn btn-sm btn-primary" onclick="showNotif('Birthday wish sent to Mohit Singh 🎂','success')">🎉 Send Wish</button>
+            </div>
+          </div>
+          <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="showNotif('Birthday wishes sent to all 2 employees','success')">📧 Send All Wishes</button>
+        </div>
+        <div class="card">
+          <div class="card-title">💍 Work Anniversaries This Week</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg3);border-radius:8px">
+              <div><div style="font-weight:600">Vikram Rao</div><div style="font-size:11px;color:var(--text3)">EMP-005 • 6 Years Today 🏆</div></div>
+              <button class="btn btn-sm btn-success" onclick="showNotif('Anniversary wish sent to Vikram Rao','success')">🎊 Wish</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg3);border-radius:8px">
+              <div><div style="font-weight:600">Amit Kumar</div><div style="font-size:11px;color:var(--text3)">EMP-003 • 5 Years on 22nd</div></div>
+              <button class="btn btn-sm btn-success" onclick="showNotif('Anniversary wish sent to Amit Kumar','success')">🎊 Wish</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Send Custom Message</div>
+        <div class="form-row">
+          <div class="field"><label>Message Type</label><select><option>Birthday Wish</option><option>Work Anniversary</option><option>Festival Greetings</option><option>Welcome New Joiner</option><option>Farewell</option><option>Congratulations</option></select></div>
+          <div class="field"><label>To Employee(s)</label><input placeholder="EMP-001, EMP-002 or 'All'"></div>
+          <div class="field"><label>From Email</label><input value="hr@company.com"></div>
+          <div class="field"><label>CC</label><input placeholder="manager@company.com"></div>
+        </div>
+        <div class="field" style="margin-bottom:12px"><label>Custom Message</label><textarea placeholder="Write your personalized message here..."></textarea></div>
+        <button class="btn btn-primary" onclick="showNotif('Message sent successfully via email','success')">📧 Send Message</button>
+      </div>
+    </div>
+
+  </div><!-- end .main -->
+</div><!-- end #app -->
+
+<!-- SALARY SLIP MODAL -->
+<div class="modal-overlay" id="salarySlipModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Salary Slip</h3><button class="modal-close" onclick="closeModal('salarySlipModal')">×</button></div>
+    <div id="salarySlipContent"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" onclick="showNotif('Salary slip emailed','success');closeModal('salarySlipModal')">📧 Email to Employee</button>
+      <button class="btn btn-outline" onclick="closeModal('salarySlipModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== STATE =====================
+let currentRole = 'admin';
+let currentUser = { name: 'Admin User', role: 'Super Admin', initial: 'A' };
+
+const roleConfig = {
+  admin:   { label:'Super Admin', color:'#ef4444', bg:'rgba(239,68,68,0.15)', modules:['navPayroll','navAsset','navNetwork','navHR'] },
+  hr:      { label:'HR Manager',  color:'#ec4899', bg:'rgba(236,72,153,0.15)', modules:['navHR'] },
+  payroll: { label:'Payroll / Finance', color:'#f59e0b', bg:'rgba(245,158,11,0.15)', modules:['navPayroll'] },
+  network: { label:'Network Ops', color:'#0ea5e9', bg:'rgba(14,165,233,0.15)', modules:['navNetwork'] },
+  it:      { label:'IT Support',  color:'#8b5cf6', bg:'rgba(139,92,246,0.15)', modules:['navAsset','navNetwork'] },
+};
+
+// ===================== LOGIN =====================
+function selectRole(btn, role) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentRole = role;
+}
+
+function doLogin() {
+  const user = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
+  if (!user || !pass) { showNotif('Please enter credentials','error'); return; }
+  const cfg = roleConfig[currentRole];
+  const name = user.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  currentUser = { name, role: cfg.label, initial: name[0].toUpperCase() };
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  // Apply role
+  const badge = document.getElementById('roleBadge');
+  badge.textContent = cfg.label;
+  badge.style.background = cfg.bg;
+  badge.style.color = cfg.color;
+  document.getElementById('avatarEl').textContent = currentUser.initial;
+  document.getElementById('userNameEl').textContent = currentUser.name;
+  document.getElementById('userRoleEl').textContent = currentUser.role;
+  // Show/hide nav sections
+  ['navPayroll','navAsset','navNetwork','navHR'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = cfg.modules.includes(id) ? 'block' : 'none';
+  });
+  initNetworkData();
+  startClock();
+  showNotif('Welcome back, ' + currentUser.name + '!', 'success');
+}
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+// ===================== NAV =====================
+function showSection(id, navEl) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('topbarTitle').textContent = navEl ? navEl.textContent.trim() : id;
+}
+
+function switchTab(el) {
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===================== CLOCK =====================
+function startClock() {
+  function tick() {
+    const now = new Date();
+    document.getElementById('clockEl').textContent = now.toLocaleTimeString('en-IN',{hour12:true});
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+// ===================== NOTIFICATIONS =====================
+function showNotif(msg, type='success') {
+  const bar = document.getElementById('notifBar');
+  const n = document.createElement('div');
+  n.className = 'notif ' + type;
+  n.innerHTML = (type==='success'?'✅ ':'❌ ') + msg;
+  bar.appendChild(n);
+  setTimeout(() => n.remove(), 4000);
+}
+
+// ===================== MODALS =====================
+function openSalarySlip() { renderSalarySlipModal(); document.getElementById('salarySlipModal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function renderSalarySlipModal() {
+  document.getElementById('salarySlipContent').innerHTML = buildSlipHTML('Rahul Sharma','EMP-001','IT','Sr. Engineer','April 2025',45000,18000,5000,8000,5400,200,3500);
+}
+
+function renderSalarySlip() {
+  document.getElementById('slipPreview').innerHTML = '<div class="card-title">Preview</div>' + buildSlipHTML('Rahul Sharma','EMP-001','IT','Sr. Engineer','April 2025',45000,18000,5000,8000,5400,200,3500);
+}
+
+function buildSlipHTML(name,empid,dept,desig,month,basic,hra,ta,spl,pf,pt,tds) {
+  const gross = basic+hra+ta+spl;
+  const deductions = pf+pt+tds;
+  const net = gross - deductions;
+  return `<div style="background:#fff;color:#111;padding:24px;border-radius:8px;font-family:Arial,sans-serif;font-size:13px;line-height:1.6">
+    <div style="text-align:center;border-bottom:2px solid #1a1a2e;padding-bottom:12px;margin-bottom:12px">
+      <div style="font-size:18px;font-weight:bold;color:#1a1a2e">ENTERPRISE HUB PVT. LTD.</div>
+      <div style="font-size:11px;color:#555">123, Tech Park, Noida, UP - 201301 | GSTIN: 09ABCDE1234F1Z5</div>
+      <div style="font-size:14px;font-weight:bold;margin-top:6px;color:#2563eb">SALARY SLIP — ${month}</div>
+    </div>
+    <table style="width:100%;margin-bottom:12px;font-size:12px"><tr>
+      <td><b>Emp ID:</b> ${empid}</td><td><b>Name:</b> ${name}</td>
+      <td><b>Dept:</b> ${dept}</td><td><b>Designation:</b> ${desig}</td>
+    </tr></table>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#1a1a2e;color:#fff"><th style="padding:6px;text-align:left">Earnings</th><th style="padding:6px;text-align:right">Amount (₹)</th><th style="padding:6px;text-align:left">Deductions</th><th style="padding:6px;text-align:right">Amount (₹)</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #eee"><td style="padding:6px">Basic Salary</td><td style="padding:6px;text-align:right">${basic.toLocaleString('en-IN')}</td><td style="padding:6px">PF (12%)</td><td style="padding:6px;text-align:right">${pf.toLocaleString('en-IN')}</td></tr>
+        <tr style="border-bottom:1px solid #eee"><td style="padding:6px">HRA</td><td style="padding:6px;text-align:right">${hra.toLocaleString('en-IN')}</td><td style="padding:6px">Professional Tax</td><td style="padding:6px;text-align:right">${pt.toLocaleString('en-IN')}</td></tr>
+        <tr style="border-bottom:1px solid #eee"><td style="padding:6px">Transport Allowance</td><td style="padding:6px;text-align:right">${ta.toLocaleString('en-IN')}</td><td style="padding:6px">TDS (Income Tax)</td><td style="padding:6px;text-align:right">${tds.toLocaleString('en-IN')}</td></tr>
+        <tr style="border-bottom:1px solid #eee"><td style="padding:6px">Special Allowance</td><td style="padding:6px;text-align:right">${spl.toLocaleString('en-IN')}</td><td style="padding:6px"></td><td></td></tr>
+      </tbody>
+      <tfoot>
+        <tr style="background:#f5f5f5;font-weight:bold"><td style="padding:8px">Gross Salary</td><td style="padding:8px;text-align:right">₹${gross.toLocaleString('en-IN')}</td><td style="padding:8px">Total Deductions</td><td style="padding:8px;text-align:right">₹${deductions.toLocaleString('en-IN')}</td></tr>
+        <tr style="background:#1a1a2e;color:#fff;font-weight:bold"><td colspan="3" style="padding:8px">NET TAKE HOME</td><td style="padding:8px;text-align:right;font-size:15px">₹${net.toLocaleString('en-IN')}</td></tr>
+      </tfoot>
+    </table>
+    <div style="margin-top:12px;font-size:10px;color:#777;text-align:center">This is a system-generated salary slip and does not require a signature.</div>
+  </div>`;
+}
+
+// ===================== LETTER PREVIEW =====================
+const letterTemplates = {
+  offer: (emp, f1, f2, f3) => `<div style="background:#fff;color:#111;padding:28px;border-radius:8px;font-family:Arial,sans-serif;font-size:12px;line-height:1.7">
+    <div style="text-align:center;border-bottom:2px solid #1a1a2e;padding-bottom:10px;margin-bottom:14px"><div style="font-size:16px;font-weight:bold;color:#1a1a2e">ENTERPRISE HUB PVT. LTD.</div><div style="font-size:10px;color:#555">123, Tech Park, Noida, UP - 201301</div></div>
+    <b>OFFER LETTER</b><br><br>Date: ${new Date().toLocaleDateString('en-IN')}<br><br>Dear <b>${emp.split('—')[1]?.trim() || emp}</b>,<br><br>
+    We are pleased to offer you the position of <b>${f1 || 'Software Engineer'}</b> at Enterprise Hub Pvt. Ltd.<br><br>
+    <b>CTC:</b> ₹${parseInt(f2||600000).toLocaleString('en-IN')} per annum<br>
+    <b>Date of Joining:</b> ${f3 || '---'}<br><br>
+    This offer is contingent upon successful completion of background verification. Please sign and return a copy of this letter by the date of joining.<br><br>
+    We look forward to welcoming you to our team.<br><br>Warm regards,<br><b>HR Department</b><br>Enterprise Hub Pvt. Ltd.
+  </div>`,
+  warning: (emp) => `<div style="background:#fff;color:#111;padding:28px;border-radius:8px;font-family:Arial,sans-serif;font-size:12px;line-height:1.7">
+    <div style="text-align:center;border-bottom:2px solid #1a1a2e;padding-bottom:10px;margin-bottom:14px"><div style="font-size:16px;font-weight:bold;color:#1a1a2e">ENTERPRISE HUB PVT. LTD.</div></div>
+    <b>WARNING LETTER</b><br><br>Date: ${new Date().toLocaleDateString('en-IN')}<br><br>
+    To: <b>${emp.split('—')[1]?.trim() || emp}</b><br><br>
+    This is to formally inform you that your recent conduct/performance has not been satisfactory and falls below the expected standards of our organization.<br><br>
+    You are hereby warned that a repetition of such behavior may lead to further disciplinary action, including termination of employment.<br><br>
+    You are required to submit a written explanation within 3 working days of receipt of this letter.<br><br>
+    Regards,<br><b>HR Department</b>
+  </div>`,
+  appraisal: (emp) => `<div style="background:#fff;color:#111;padding:28px;border-radius:8px;font-family:Arial,sans-serif;font-size:12px;line-height:1.7">
+    <div style="text-align:center;border-bottom:2px solid #1a1a2e;padding-bottom:10px;margin-bottom:14px"><div style="font-size:16px;font-weight:bold;color:#1a1a2e">ENTERPRISE HUB PVT. LTD.</div></div>
+    <b>APPRAISAL LETTER</b><br><br>Date: ${new Date().toLocaleDateString('en-IN')}<br><br>
+    Dear <b>${emp.split('—')[1]?.trim() || emp}</b>,<br><br>
+    We are pleased to inform you that based on your performance review for FY 2024-25, you have been awarded a salary increment of <b>15%</b> effective from 1st April 2025.<br><br>
+    Your revised CTC will be communicated separately. We appreciate your contributions and look forward to your continued growth.<br><br>
+    Congratulations!<br><br>Regards,<br><b>HR Department</b>
+  </div>`,
+  appreciation: (emp) => `<div style="background:#fff;color:#111;padding:28px;border-radius:8px;font-family:Arial,sans-serif;font-size:12px;line-height:1.7">
+    <div style="text-align:center;border-bottom:2px solid #1a1a2e;padding-bottom:10px;margin-bottom:14px"><div style="font-size:16px;font-weight:bold;color:#1a1a2e">ENTERPRISE HUB PVT. LTD.</div></div>
+    <b>APPRECIATION LETTER</b><br><br>Date: ${new Date().toLocaleDateString('en-IN')}<br><br>
+    Dear <b>${emp.split('—')[1]?.trim() || emp}</b>,<br><br>
+    We would like to express our sincere appreciation for your outstanding performance and dedication. Your hard work and commitment have significantly contributed to our team's success.<br><br>
+    Keep up the excellent work!<br><br>Regards,<br><b>HR Department</b>
+  </div>`,
+  experience: (emp) => `<div style="background:#fff;color:#111;padding:28px;border-radius:8px;font-family:Arial,sans-serif;font-size:12px;line-height:1.7">
+    <div style="text-align:center;border-bottom:2px solid #1a1a2e;padding-bottom:10px;margin-bottom:14px"><div style="font-size:16px;font-weight:bold;color:#1a1a2e">ENTERPRISE HUB PVT. LTD.</div></div>
+    <b>EXPERIENCE LETTER</b><br><br>Date: ${new Date().toLocaleDateString('en-IN')}<br><br>
+    To Whomsoever It May Concern,<br><br>
+    This is to certify that <b>${emp.split('—')[1]?.trim() || emp}</b> was employed with Enterprise Hub Pvt. Ltd. and served the organization diligently during their tenure.<br><br>
+    During this period, they demonstrated excellent professional conduct and technical skills. We wish them the very best in their future endeavors.<br><br>
+    Regards,<br><b>HR Department</b>
+  </div>`,
+};
+
+function updateLetterFields() {
+  const type = document.getElementById('letterType').value;
+  const f = document.getElementById('letterExtraFields');
+  const fields = {
+    offer: `<div class="field" style="margin-bottom:12px"><label>Designation Offered</label><input placeholder="Software Engineer" id="lf1"></div><div class="field" style="margin-bottom:12px"><label>CTC (Annual ₹)</label><input placeholder="600000" id="lf2"></div><div class="field" style="margin-bottom:12px"><label>Joining Date</label><input type="date" id="lf3"></div>`,
+    appraisal: `<div class="field" style="margin-bottom:12px"><label>New CTC (₹)</label><input placeholder="700000" id="lf1"></div><div class="field" style="margin-bottom:12px"><label>Increment %</label><input placeholder="15" id="lf2"></div>`,
+    warning: `<div class="field" style="margin-bottom:12px"><label>Incident Description</label><textarea placeholder="Describe the issue..." id="lf1"></textarea></div>`,
+    increment: `<div class="field" style="margin-bottom:12px"><label>New Basic (₹)</label><input placeholder="50000" id="lf1"></div><div class="field" style="margin-bottom:12px"><label>Effective Date</label><input type="date" id="lf2"></div>`,
+  };
+  f.innerHTML = fields[type] || '';
+}
+
+function previewLetter() {
+  const type = document.getElementById('letterType').value;
+  const emp = document.getElementById('letterEmp').value;
+  const lf1 = document.getElementById('lf1')?.value;
+  const lf2 = document.getElementById('lf2')?.value;
+  const lf3 = document.getElementById('lf3')?.value;
+  const tmpl = letterTemplates[type] || letterTemplates.appreciation;
+  document.getElementById('letterPreviewContent').innerHTML = tmpl(emp, lf1, lf2, lf3);
+}
+
+// ===================== NETWORK DATA =====================
+const devices = [
+  {name:'Core-Switch-01', type:'Switch', ip:'192.168.1.1', loc:'DC Rack A1', status:'up'},
+  {name:'Edge-Router-01', type:'Router', ip:'10.0.0.1', loc:'DC Rack A2', status:'up'},
+  {name:'Web-Server-01', type:'Server', ip:'192.168.1.10', loc:'DC Rack B1', status:'up'},
+  {name:'DB-Server-01', type:'Server', ip:'192.168.1.11', loc:'DC Rack B2', status:'down'},
+  {name:'Firewall-01', type:'Firewall', ip:'10.0.0.2', loc:'DC Entry', status:'up'},
+  {name:'AP-Floor2-01', type:'Access Point', ip:'192.168.2.10', loc:'Floor 2', status:'up'},
+  {name:'SW-Floor1-01', type:'Switch', ip:'192.168.1.20', loc:'Floor 1 Rack', status:'degraded'},
+  {name:'Backup-Server', type:'Server', ip:'192.168.1.15', loc:'DC Rack C1', status:'down'},
+];
+
+function initNetworkData() {
+  const grid = document.getElementById('deviceGrid');
+  if (!grid) return;
+  grid.innerHTML = devices.map(d => {
+    const color = d.status==='up'?'var(--green)':d.status==='down'?'var(--red)':'var(--yellow)';
+    const up = d.status==='up'?(Math.random()*800+100).toFixed(1):0;
+    const dn = d.status==='up'?(Math.random()*400+50).toFixed(1):0;
+    return `<div class="device-card">
+      <div style="position:absolute;top:12px;right:12px;width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color}"></div>
+      <div class="device-name">${d.name}</div>
+      <div class="device-ip">${d.ip} • ${d.type}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">${d.loc}</div>
+      <div class="device-stats">
+        <span class="up">↑ ${up} Mbps</span>
+        <span class="down">↓ ${dn} Mbps</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const linkTable = document.getElementById('linkTable');
+  if (!linkTable) return;
+  linkTable.innerHTML = devices.map(d => {
+    const up = d.status==='up'?(Math.random()*800+100).toFixed(1):0;
+    const dn = d.status==='up'?(Math.random()*400+50).toFixed(1):0;
+    const lat = d.status==='up'?(Math.random()*20+1).toFixed(1):'-';
+    const upt = d.status==='up'?'99.'+Math.floor(Math.random()*9)+'%':'-';
+    const badge = d.status==='up'?'badge-green':d.status==='down'?'badge-red':'badge-yellow';
+    const label = d.status==='up'?'UP':d.status==='down'?'DOWN':'Degraded';
+    return `<tr>
+      <td>${d.name}</td><td>GE0/0/1</td><td>1 Gbps</td>
+      <td><span class="dot dot-${d.status==='up'?'green':d.status==='down'?'red':'yellow'}"></span>${label}</td>
+      <td style="font-family:var(--mono)">${up}</td>
+      <td style="font-family:var(--mono)">${dn}</td>
+      <td style="font-family:var(--mono)">${lat} ms</td>
+      <td>${upt}</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// Live data refresh
+setInterval(() => {
+  if (document.getElementById('sec-net-status').classList.contains('active')) {
+    initNetworkData();
+  }
+}, 5000);
+
+// Init
+document.getElementById('loginScreen').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
